@@ -10,8 +10,13 @@
     "preview": "astro preview",
     "astro": "astro"
   },
+  "devDependencies": {
+    "@types/cookie": "^0.5.1"
+  },
   "dependencies": {
     "@astrojs/vercel": "^2.3.1",
-    "astro": "^1.5.2"
+    "@supabase/supabase-js": "^2.0.4",
+    "astro": "^1.5.2",
+    "cookie": "^0.5.0"
   }
 }

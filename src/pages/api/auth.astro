@@ -1,0 +1,39 @@
+---
+import { createClient } from "@supabase/supabase-js";
+//import cookie from "cookie";
+
+export const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_KEY
+);
+
+const action = Astro.url.searchParams.get("action");
+const token = Astro.url.searchParams.get("access_token");
+switch (action) {
+  case "login":
+    {
+      if (token) {
+        Astro.cookies.set("access-token", token, {
+          path: "/",
+          maxAge: 60 * 60 * 24 * 7,
+          sameSite: "strict",
+          httpOnly: true,
+          secure: true,
+        });
+      }
+    }
+    break;
+  case "logout":
+    {
+      Astro.cookies.set("access-token", "", {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+        sameSite: "strict",
+        httpOnly: true,
+        secure: true,
+      });
+    }
+    break;
+}
+return Astro.redirect("/");
+---

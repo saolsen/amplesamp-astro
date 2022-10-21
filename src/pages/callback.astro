@@ -1,0 +1,14 @@
+---
+---
+
+<script>
+  import { createClient } from "@supabase/supabase-js";
+  export const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_KEY
+  );
+  let session = await supabase.auth.getSession();
+
+  location.href =
+    "/api/auth?action=login&access_token=" + session.data.session?.access_token;
+</script>

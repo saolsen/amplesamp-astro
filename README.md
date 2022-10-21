@@ -1,49 +1,143 @@
-# Welcome to [Astro](https://astro.build)
+# Supabase CLI (v1)
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main)
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-![basics](https://user-images.githubusercontent.com/4677417/186188965-73453154-fdec-4d6b-9c34-cb35c248ae5b.png)
+This repository contains all the functionality for Supabase CLI.
 
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Pushing your local changes to production
+- [x] Create and Deploy Supabase Functions
+- [ ] Manage your Supabase Account
+- [x] Manage your Supabase Projects
+- [x] Generating types directly from your database schema
+- [ ] Generating API and validation schemas from your database
 
-## 🚀 Project Structure
+## Getting started
 
-Inside of your Astro project, you'll see the following folders and files:
+### Install the CLI
 
+#### NodeJS
+
+Available via [NPM](https://www.npmjs.com). To install:
+
+```bash
+npm i supabase
 ```
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── components/
-│   │   └── Card.astro
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+
+To run:
+
+```bash
+npx supabase -h
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+#### macOS
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Available via [Homebrew](https://brew.sh). To install:
 
-Any static assets, like images, can be placed in the `public/` directory.
+```sh
+brew install supabase/tap/supabase
+```
 
-## 🧞 Commands
+To upgrade:
 
-All commands are run from the root of the project, from a terminal:
+```sh
+brew upgrade supabase
+```
 
-| Command                | Action                                             |
-| :--------------------- | :------------------------------------------------- |
-| `npm install`          | Installs dependencies                              |
-| `npm run dev`          | Starts local dev server at `localhost:3000`        |
-| `npm run build`        | Build your production site to `./dist/`            |
-| `npm run preview`      | Preview your build locally, before deploying       |
-| `npm run astro ...`    | Run CLI commands like `astro add`, `astro preview` |
-| `npm run astro --help` | Get help using the Astro CLI                       |
+#### Windows
 
-## 👀 Want to learn more?
+Available via [Scoop](https://scoop.sh). To install:
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+```powershell
+scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+scoop install supabase
+```
+
+To upgrade:
+
+```powershell
+scoop update supabase
+```
+
+#### Linux
+
+Available via [Homebrew](https://brew.sh) and Linux packages.
+
+##### via Homebrew
+
+To install:
+
+```sh
+brew install supabase/tap/supabase
+```
+
+To upgrade:
+
+```sh
+brew upgrade supabase
+```
+
+##### via Linux packages
+
+Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm` file depending on your package manager and run the respective commands.
+
+```sh
+sudo apk add --allow-untrusted <...>.apk
+```
+
+```sh
+sudo dpkg -i <...>.deb
+```
+
+```sh
+sudo rpm -i <...>.rpm
+```
+
+#### Other Platforms
+
+You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+```sh
+go install github.com/supabase/cli@latest
+```
+
+Add a symlink to the binary in `$PATH` for easier access:
+
+```sh
+ln -s "$(go env GOPATH)/cli" /usr/bin/supabase
+```
+
+This works on non-standard linux distros, like archlinux.
+
+### Run the CLI
+
+```sh
+supabase help
+```
+
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+The CLI is a WIP and we're still exploring the design, so expect a lot of breaking changes. We try to document migration steps in [Releases](https://github.com/supabase/cli/releases). Please file an issue if these steps don't work!
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.18
+go run . help
+```
+
+---
+
+## Sponsors
+
+[![New Sponsor](https://user-images.githubusercontent.com/10214025/90518111-e74bbb00-e198-11ea-8f88-c9e3c1aa4b5b.png)](https://github.com/sponsors/supabase)
+
