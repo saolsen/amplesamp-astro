@@ -1,6 +1,6 @@
 ---
 export interface Props {
-	title: string;
+  title: string;
 }
 
 const { title } = Astro.props;
@@ -8,28 +8,100 @@ const { title } = Astro.props;
 
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+    <style is:global>
+      :root {
+        --color-background: #edf4f4;
+        --color-gray: #bbc3c5;
+        --color-gray-dark: #5d6061;
+        --color-blue: #7dbdc9;
+        --color-blue-dark: #468590;
+        --color-red: #468590;
+        --color-red-dark: #a4554c;
+        --color-purple: #998bd4;
+        --color-purple-dark: #625796;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        font-family: "Ubuntu Mono", monospace;
+        /* font-family: 'Inter', sans-serif; */
+        background-color: #f6f6f6;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: "Ubuntu Mono", monospace;
+      }
+
+      html {
+        height: 100%;
+      }
+
+      body {
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        flex-direction: column;
+        min-height: 100vh;
+        padding: 2px 6px;
+        background-color: var(--color-background);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+      }
+
+      .nav-item {
+        padding: 10px;
+      }
+
+      .button {
+        padding: 2px 4px 2px 4px;
+        text-decoration: none;
+        font: bold;
+        background-color: var(--color-blue);
+        border: black 1px solid;
+      }
+
+      .button:hover {
+        background-color: var(--color-blue-dark);
+      }
+
+      main {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    </style>
+  </body>
 </html>
-<style is:global>
-	:root {
-		--accent: 124, 58, 237;
-		--accent-gradient: linear-gradient(45deg, rgb(var(--accent)), #da62c4 30%, white 60%);
-	}
-	html {
-		font-family: system-ui, sans-serif;
-		background-color: #F6F6F6;
-	}
-	code {
-		font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
-			Bitstream Vera Sans Mono, Courier New, monospace;
-	}
-</style>

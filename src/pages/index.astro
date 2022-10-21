@@ -27,52 +27,46 @@ if (sb_user) {
 }
 ---
 
-<Layout title="Welcome to Astro.">
+<Layout title="Amplesamp">
+  <header class="header">
+    <h1>amplesamp</h1>
+    <nav class="nav">
+      <div class="nav-item">
+        <a class="button" href="/login">login</a>
+      </div>
+      <div class="nav-item">
+        <a class="button" href="/api/auth?action=logout">logout</a>
+      </div>
+      <div class="nav-item">
+        <a class="button" href="/app">Dashboard</a>
+      </div>
+    </nav>
+  </header>
   <main>
-    ok {sb_user}, this is ur computer project.
-    <!-- <button onclick="login()">login</button>
-    <button onclick="logout()">logout</button> -->
-    <a href="/login">login</a>
-    <a href="/api/auth?action=logout">logout</a>
+    <article class="marketing__content">
+      <p>
+        Amplesamp is a tool that helps you generate data for tests, examples,
+        demos, simulations and more!
+      </p>
+      <p>
+        It is a programming language that makes it easy to model your domain,
+        run simulations and generate data. It has built in support for random
+        (and constrained) data generation and a powerful debugger.
+      </p>
+      <p>If you have a problem that needs better generated data email us.</p>
+      <p><a href="mailto:hello@amplesamp.com">hello@amplesamp.com</a></p>
+      <p><a href="/login">Try it Out</a></p>
+    </article>
   </main>
+  <footer class="footer app__footer">Amplesamp</footer>
 </Layout>
-
-<script>
-  //   import { createClient } from "@supabase/supabase-js";
-  //   export const supabase = createClient(
-  //     import.meta.env.PUBLIC_SUPABASE_URL,
-  //     import.meta.env.PUBLIC_SUPABASE_KEY
-  //   );
-  //   console.log(await supabase.auth.getUser());
-
-  //   async function _login() {
-  //     await supabase.auth.signInWithOAuth({
-  //       provider: "google",
-  //       options: {
-  //         redirectTo: "http://localhost:3000/callback",
-  //       },
-  //     });
-  //   }
-  //   async function _logout() {
-  //     await supabase.auth.signOut();
-  //   }
-
-  //   declare global {
-  //     var login: typeof _login;
-  //     var logout: typeof _logout;
-  //   }
-
-  //   globalThis.login = _login;
-  //   globalThis.logout = _logout;
-
-  //   supabase.auth.onAuthStateChange((event, session) => {
-  //     console.log(event, session);
-  //   });
-</script>
 <style>
-  main {
-    margin: auto;
-    padding: 1.5rem;
-    max-width: 60ch;
+  article {
+    height: 100%;
+    padding: 6px;
+  }
+
+  p {
+    padding: 6px;
   }
 </style>

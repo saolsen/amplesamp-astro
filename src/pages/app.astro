@@ -1,0 +1,209 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+import { createClient } from "@supabase/supabase-js";
+
+export const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_KEY
+);
+
+let sb_user;
+
+const cookie = Astro.cookies.get("access-token");
+if (cookie && cookie.value !== "") {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser(cookie.value);
+  if (user && user.role == "authenticated") {
+    sb_user = user;
+  }
+} else {
+  sb_user = null;
+}
+
+if (sb_user) {
+  sb_user = sb_user.email;
+}
+
+const source = `
+  hello world
+`;
+---
+
+<Layout title="Amplesamp">
+  <header class="header app__header">
+    <h1>amplesamp</h1>
+    <nav class="nav">
+      <div class="nav-item">
+        <a class="button" href="/login">login</a>
+      </div>
+      <div class="nav-item">
+        <a class="button" href="/api/auth?action=logout">logout</a>
+      </div>
+      <div class="nav-item">
+        <a class="button" href="/app">Dashboard</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="editor-panal">
+      <header class="header">
+        <h2>{sb_user}</h2>
+        <nav class="nav">
+          <div class="nav-item">
+            <button
+              class="button nav-item"
+              hx-post="/run"
+              hx-include="#program_source"
+              hx-target="#program_output"
+            >
+              Run
+            </button>
+          </div>
+        </nav>
+      </header>
+      <div class="editor-wrapper">
+        <div class="editor" id="program_editor"></div>
+      </div>
+    </section>
+    <section class="results-panal">
+      <header class="header">
+        <nav class="nav tabs">
+          <input
+            class="tab-input"
+            type="radio"
+            name="tabs"
+            id="tab1"
+            onclick="tabClick(this);"
+            value="results-tab"
+            checked
+          />
+          <label class="nav__item" for="tab1">Results</label>
+          <input
+            class="tab-input"
+            type="radio"
+            name="tabs"
+            id="tab2"
+            onclick="tabClick(this);"
+            value="errors-tab"
+          />
+          <label class="nav__item" for="tab2">Errors</label>
+        </nav>
+      </header>
+      <div id="program_output" class="results">
+        <div id="results-tab" class="tab content1">Run to see results</div>
+        <div id="errors-tab" class="tab content2">Run to see errors</div>
+      </div>
+    </section>
+  </main>
+  <textarea id="program_source" name="source" style="display: none"
+    >{source}</textarea
+  >
+  <footer class="footer app__footer">Amplesamp</footer>
+</Layout>
+<script>
+  import { editor } from "monaco-editor/esm/vs/editor/editor.api.js";
+
+  window.onload = () => {
+    let source_element = document.getElementById(
+      "program_source"
+    ) as HTMLTextAreaElement;
+    let source = source_element?.value;
+    let editor_element = document.getElementById(
+      "program_editor"
+    ) as HTMLDivElement;
+    editor.create(editor_element, {
+      value: source,
+      language: "python", // todo: my language
+      glyphMargin: true,
+      minimap: { enabled: false },
+      automaticLayout: true,
+    });
+  };
+
+  // function compile() {
+  //   // keep editor in sync with the source element
+  //   let new_source = editor.getValue();
+  //   source_element.value = new_source;
+
+  //   fetch("/api/compile", {
+  //     method: "POST",
+  //     body: JSON.stringify({ source: new_source }),
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //   })
+  //     .then((response) => {
+  //       if (!response.ok) {
+  //         console.error("Fatal error");
+  //         return [];
+  //       } else {
+  //         return response.json();
+  //       }
+  //     })
+  //     .then((data) => {
+  //       const markers = [];
+  //       for (let error of data) {
+  //         markers.push({
+  //           message: error.message,
+  //           severity: monaco.MarkerSeverity.Error,
+  //           startLineNumber: error.line,
+  //           startColumn: error.column,
+  //           endLineNumber: error.line,
+  //           endColumn: error.column,
+  //         });
+  //       }
+
+  //       monaco.editor.setModelMarkers(editor.getModel()?, "owner", markers);
+  //     });
+  // }
+  // compile();
+
+  // editor.onDidChangeModelContent(function (e) {
+  //   compile();
+  // });
+
+  // // Tabs
+  // let selected_tab = "results-tab";
+  // let tabs = ["results-tab", "errors-tab"];
+
+  // function showTab(id) {
+  //   selected_tab = id;
+  //   for (const tabId of tabs) {
+  //     if (tabId === id) {
+  //       document.getElementById(tabId).style.display = "block";
+  //     } else {
+  //       document.getElementById(tabId).style.display = "none";
+  //     }
+  //   }
+  // }
+
+  // function tabClick(element) {
+  //   showTab(element.value);
+  // }
+</script>
+<style>
+  main {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+  }
+
+  section {
+    margin: 6px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .editor-wrapper {
+    flex: 1;
+  }
+
+  .editor {
+    outline: black 2px solid;
+    height: 100%;
+  }
+</style>
