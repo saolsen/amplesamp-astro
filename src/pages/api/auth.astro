@@ -1,6 +1,5 @@
 ---
 import { createClient } from "@supabase/supabase-js";
-//import cookie from "cookie";
 
 export const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
@@ -22,7 +21,7 @@ switch (action) {
         });
       }
     }
-    break;
+    return Astro.redirect("/app");
   case "logout":
     {
       Astro.cookies.set("access-token", "", {
@@ -33,7 +32,6 @@ switch (action) {
         secure: true,
       });
     }
-    break;
+    return Astro.redirect("/");
 }
-return Astro.redirect("/");
 ---
