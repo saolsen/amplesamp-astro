@@ -3,9 +3,22 @@ import Layout from "../layouts/Layout.astro";
 
 import { createClient } from "@supabase/supabase-js";
 
-export const supabase = createClient(
+const user_agent = Astro.request.headers.get("user-agent");
+let options = {};
+if (user_agent !== null) {
+  options = {
+    global: {
+      headers: {
+        "x_forwarded_user_agent": user_agent,
+      },
+    },
+  }
+}
+
+const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_KEY
+  import.meta.env.PUBLIC_SUPABASE_KEY,
+  options
 );
 
 let sb_user;
