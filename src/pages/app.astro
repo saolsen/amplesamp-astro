@@ -1,37 +1,30 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
-import { createClient } from "@supabase/supabase-js";
+import getUserConnection from "../auth";
 
-export const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_KEY
-);
-
-let sb_user;
-
-const cookie = Astro.cookies.get("access-token");
-if (cookie && cookie.value !== "") {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser(cookie.value);
-  if (user && user.role == "authenticated") {
-    sb_user = user;
-  }
+let sb_user = null;
+let user = await getUserConnection(Astro.cookies);
+if (user) {
+  sb_user = user.user.email;
 } else {
-  sb_user = null;
-}
-
-if (sb_user) {
-  sb_user = sb_user.email;
-}
-
-if (sb_user == null) {
   return Astro.redirect("/");
 }
 
 const source = `
-  hello world
+# test program
+type Organization {
+    i: Int,
+    number_of_employees: Int,
+}
+print 1
+print 2
+#print 1 + 2
+github_org = create Organization {
+    i: 1,
+    number_of_employees: 1,
+}
+print github_org
 `;
 ---
 
@@ -103,85 +96,53 @@ const source = `
   <footer class="footer app__footer">Amplesamp (vercel)</footer>
 </Layout>
 <script>
-  import { editor } from "monaco-editor/esm/vs/editor/editor.api.js";
+  import * as monaco from "monaco-editor";
+  import { compile } from "amplesamp-wasm";
 
-  window.onload = () => {
-    let source_element = document.getElementById(
-      "program_source"
-    ) as HTMLTextAreaElement;
-    let source = source_element?.value;
-    let editor_element = document.getElementById(
-      "program_editor"
-    ) as HTMLDivElement;
-    editor.create(editor_element, {
-      value: source,
-      language: "python", // todo: my language
-      glyphMargin: true,
-      minimap: { enabled: false },
-      automaticLayout: true,
-    });
-  };
+  let source_element = document.getElementById(
+    "program_source"
+  ) as HTMLTextAreaElement;
+  let source = source_element?.value;
+  let editor_element = document.getElementById(
+    "program_editor"
+  ) as HTMLDivElement;
+  let code_editor = monaco.editor.create(editor_element, {
+    value: source,
+    language: "python", // todo: my language
+    glyphMargin: true,
+    minimap: { enabled: false },
+    automaticLayout: true,
+  });
 
-  // function compile() {
-  //   // keep editor in sync with the source element
-  //   let new_source = editor.getValue();
-  //   source_element.value = new_source;
+  async function compile_src() {
+    // keep editor in sync with the source element
+    let new_source = code_editor.getValue();
+    source_element.value = new_source;
 
-  //   fetch("/api/compile", {
-  //     method: "POST",
-  //     body: JSON.stringify({ source: new_source }),
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   })
-  //     .then((response) => {
-  //       if (!response.ok) {
-  //         console.error("Fatal error");
-  //         return [];
-  //       } else {
-  //         return response.json();
-  //       }
-  //     })
-  //     .then((data) => {
-  //       const markers = [];
-  //       for (let error of data) {
-  //         markers.push({
-  //           message: error.message,
-  //           severity: monaco.MarkerSeverity.Error,
-  //           startLineNumber: error.line,
-  //           startColumn: error.column,
-  //           endLineNumber: error.line,
-  //           endColumn: error.column,
-  //         });
-  //       }
+    let result = compile(new_source);
 
-  //       monaco.editor.setModelMarkers(editor.getModel()?, "owner", markers);
-  //     });
-  // }
-  // compile();
+    const markers = [];
+    for (let error of result) {
+      markers.push({
+        message: error.message,
+        severity: monaco.MarkerSeverity.Error,
+        startLineNumber: error.line,
+        startColumn: error.column,
+        endLineNumber: error.line,
+        endColumn: error.column,
+      });
+    }
 
-  // editor.onDidChangeModelContent(function (e) {
-  //   compile();
-  // });
+    let model = code_editor.getModel();
+    if (model) {
+      monaco.editor.setModelMarkers(model, "owner", markers);
+    }
+  }
+  compile_src();
 
-  // // Tabs
-  // let selected_tab = "results-tab";
-  // let tabs = ["results-tab", "errors-tab"];
-
-  // function showTab(id) {
-  //   selected_tab = id;
-  //   for (const tabId of tabs) {
-  //     if (tabId === id) {
-  //       document.getElementById(tabId).style.display = "block";
-  //     } else {
-  //       document.getElementById(tabId).style.display = "none";
-  //     }
-  //   }
-  // }
-
-  // function tabClick(element) {
-  //   showTab(element.value);
-  // }
+  code_editor.onDidChangeModelContent(function (_) {
+    compile_src();
+  });
 </script>
 <style>
   main {

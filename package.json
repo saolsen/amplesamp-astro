@@ -7,13 +7,18 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
+    "build:wasm": "wasm-pack build amplesamp-wasm --debug --target bundler && rm amplesamp-wasm/pkg/.gitignore",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/vercel": "^2.3.1",
     "@supabase/supabase-js": "^2.0.4",
+    "amplesamp-wasm": "file:amplesamp-wasm/pkg",
     "astro": "^1.5.2",
     "monaco-editor": "^0.34.1"
+  },
+  "devDependencies": {
+    "vite-plugin-wasm": "^3.1.0"
   }
 }

@@ -1,30 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
-import { createClient } from "@supabase/supabase-js";
-
-async function getUserConnection() {
-
-  const cookie = Astro.cookies.get("access-token");
-  if (cookie && cookie.value !== "") {
-    const supabase = createClient(
-      import.meta.env.PUBLIC_SUPABASE_URL,
-      import.meta.env.PUBLIC_SUPABASE_KEY
-    );
-    const {
-      data: { user },
-    } = await supabase.auth.getUser(cookie.value);
-    if (user && user.role == "authenticated") {
-      return {supabase, user}
-    }
-  }
-
-  return null;
-}
+import getUserConnection from "../auth";
 
 let sb_user = null;
-
-let user = await getUserConnection();
+let user = await getUserConnection(Astro.cookies);
 if (user) {
   sb_user = user.user.email;
 }
