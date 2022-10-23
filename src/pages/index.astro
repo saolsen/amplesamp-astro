@@ -4,6 +4,7 @@ import Layout from "../layouts/Layout.astro";
 import { createClient } from "@supabase/supabase-js";
 
 const user_agent = Astro.request.headers.get("user-agent");
+console.log(user_agent);
 let options = {};
 if (user_agent !== null) {
   options = {
