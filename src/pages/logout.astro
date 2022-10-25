@@ -1,0 +1,16 @@
+---
+---
+
+<script>
+  import { createClient } from "@supabase/supabase-js";
+  export const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_KEY
+  );
+  supabase.auth.onAuthStateChange((event, _) => {
+    if (event == "SIGNED_OUT") {
+      window.location.href = "/api/auth?action=logout";
+    }
+  });
+  await supabase.auth.signOut();
+</script>

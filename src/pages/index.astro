@@ -3,10 +3,10 @@ import Layout from "../layouts/Layout.astro";
 
 import getUserConnection from "../auth";
 
-let sb_user = null;
+let user_email = null;
 let user = await getUserConnection(Astro.cookies);
 if (user) {
-  sb_user = user.user.email;
+  user_email = user.user.email;
 }
 ---
 
@@ -15,9 +15,9 @@ if (user) {
     <h1>amplesamp</h1>
     <nav class="nav">
       {
-        sb_user ? (
+        user_email ? (
           <div class="nav-item">
-            <a class="button" href="/api/auth?action=logout">
+            <a class="button" href="/logout">
               logout
             </a>
           </div>
