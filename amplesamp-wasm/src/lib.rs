@@ -18,31 +18,8 @@ pub fn greet() {
     alert("Hello, amplesamp-wasm!");
 }
 
-// #[wasm_bindgen]
-// pub struct Error {
-//     kind: String,
-//     line: u32,
-//     column: u32,
-//     message: String,
-// }
-
-// #[wasm_bindgen]
-// impl Error {
-//     #[wasm_bindgen(constructor)]
-//     pub fn new(kind: String, line: u32, column: u32, message: String) -> Error {
-//         Error {
-//             kind,
-//             line,
-//             column,
-//             message,
-//         }
-//     }
-// }
-
-// use amplesamp_lang::Error;
-
 #[wasm_bindgen]
-pub fn compile(source: String) -> JsValue {
+pub fn compile(source: String) -> Result<(), JsValue> {
     let ast = amplesamp_lang::parse_program(&source);
     let errors = match ast {
         Ok(ast) => {
@@ -51,5 +28,36 @@ pub fn compile(source: String) -> JsValue {
         }
         Err(errs) => errs,
     };
-    serde_wasm_bindgen::to_value(&errors).unwrap()
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(serde_wasm_bindgen::to_value(&errors).unwrap())
+    }
+}
+
+#[wasm_bindgen]
+pub struct Vm {
+    vm: amplesamp_lang::Vm,
+}
+
+#[wasm_bindgen]
+impl Vm {
+    #[wasm_bindgen(constructor)]
+    pub fn new(source: String) -> Result<Vm, JsValue> {
+        let ast = amplesamp_lang::parse_program(&source);
+        match ast {
+            Ok(ast) => {
+                let program = amplesamp_lang::compile(ast);
+                let vm = amplesamp_lang::Vm::new(program);
+                Ok(Vm { vm })
+            }
+            Err(errors) => Err(serde_wasm_bindgen::to_value(&errors).unwrap()),
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn run(&mut self) -> JsValue {
+        let results = self.vm.run();
+        serde_wasm_bindgen::to_value(&results).unwrap()
+    }
 }

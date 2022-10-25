@@ -83,8 +83,11 @@ impl<'a> Results<'a> {
     }
 }
 
-pub struct Vm<'a> {
-    program: &'a Program,
+pub struct Vm {
+    // there's no need for this to be a copy of the program
+    // it could just be a reference, but that means adding
+    // a lifetime which won't work through wasm-bindgen.
+    program: Program,
     globals: HashMap<VariableName, Value>,
     // Starting simple, no deletions
     objects: HashMap<TypeName, Vec<(Tick, HashMap<FieldName, Value>)>>,
@@ -94,8 +97,8 @@ pub struct Vm<'a> {
     tick: Tick,
 }
 
-impl<'a> Vm<'a> {
-    pub fn new(program: &'a Program) -> Self {
+impl Vm {
+    pub fn new(program: Program) -> Self {
         Self {
             program,
             globals: HashMap::new(),

@@ -45,14 +45,7 @@ print github_org
         <h2>{user_email}</h2>
         <nav class="nav">
           <div class="nav-item">
-            <button
-              class="button nav-item"
-              hx-post="/run"
-              hx-include="#program_source"
-              hx-target="#program_output"
-            >
-              Run
-            </button>
+            <button class="button nav-item" onclick="runClick()"> Run</button>
           </div>
         </nav>
       </header>
@@ -85,7 +78,9 @@ print github_org
         </nav>
       </header>
       <div id="program_output" class="results">
-        <div id="results-tab" class="tab content1">Run to see results</div>
+        <div id="results-tab" class="tab content1">
+          <div id="results">results go here</div>
+        </div>
         <div id="errors-tab" class="tab content2">Run to see errors</div>
       </div>
     </section>
@@ -97,7 +92,7 @@ print github_org
 </Layout>
 <script>
   import * as monaco from "monaco-editor";
-  import { compile } from "amplesamp-wasm";
+  import { compile, Vm } from "amplesamp-wasm";
 
   let source_element = document.getElementById(
     "program_source"
@@ -119,23 +114,25 @@ print github_org
     let new_source = code_editor.getValue();
     source_element.value = new_source;
 
-    let result = compile(new_source);
+    try {
+      compile(new_source);
+    } catch (e: any) {
+      const markers = [];
+      for (let error of e) {
+        markers.push({
+          message: error.message,
+          severity: monaco.MarkerSeverity.Error,
+          startLineNumber: error.line,
+          startColumn: error.column,
+          endLineNumber: error.line,
+          endColumn: error.column,
+        });
+      }
 
-    const markers = [];
-    for (let error of result) {
-      markers.push({
-        message: error.message,
-        severity: monaco.MarkerSeverity.Error,
-        startLineNumber: error.line,
-        startColumn: error.column,
-        endLineNumber: error.line,
-        endColumn: error.column,
-      });
-    }
-
-    let model = code_editor.getModel();
-    if (model) {
-      monaco.editor.setModelMarkers(model, "owner", markers);
+      let model = code_editor.getModel();
+      if (model) {
+        monaco.editor.setModelMarkers(model, "owner", markers);
+      }
     }
   }
   compile_src();
@@ -168,10 +165,34 @@ print github_org
     showTab(element.value);
   }
 
+  function run() {
+    const source = code_editor.getValue();
+    try {
+      let vm = new Vm(source);
+      let result = vm.run();
+      console.log(result);
+      let element = document.getElementById("results");
+      // todo: better way of showing this.
+      // dont really wanna do like a full react/solid
+      // thing for both sides of this but could if I need to.
+      if (element) {
+        element.innerText = JSON.stringify(result, null, 2);
+      }
+    } catch (e: any) {
+      console.log(e);
+    }
+  }
+
+  function runClick(_: HTMLButtonElement) {
+    run();
+  }
+
   declare global {
     function tabClick(element: HTMLInputElement): void;
+    function runClick(element: HTMLButtonElement): void;
   }
   globalThis.tabClick = tabClick;
+  globalThis.runClick = runClick;
 </script>
 <style>
   main {
