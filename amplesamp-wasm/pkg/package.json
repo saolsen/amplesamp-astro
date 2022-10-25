@@ -1,0 +1,16 @@
+{
+  "name": "amplesamp-wasm",
+  "collaborators": [
+    "steve olsen <dev@steve.computer>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "amplesamp_wasm_bg.wasm",
+    "amplesamp_wasm.js",
+    "amplesamp_wasm_bg.js",
+    "amplesamp_wasm.d.ts"
+  ],
+  "module": "amplesamp_wasm.js",
+  "types": "amplesamp_wasm.d.ts",
+  "sideEffects": false
+}
