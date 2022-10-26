@@ -38,8 +38,16 @@ pub enum DisplayValue<'a> {
     Object {
         object_type: &'a str,
         fields: HashMap<&'a str, DisplayValue<'a>>,
-        value: String, // TODO: get rid of this hack!!!!!
     },
+}
+
+impl<'a> DisplayValue<'a> {
+    fn object(object_type: &'a str, fields: HashMap<&'a str, DisplayValue<'a>>) -> Self {
+        Self::Object {
+            object_type,
+            fields,
+        }
+    }
 }
 
 impl<'a> Display for DisplayValue<'a> {
@@ -52,7 +60,6 @@ impl<'a> Display for DisplayValue<'a> {
             DisplayValue::Object {
                 object_type,
                 fields,
-                value: _, // temporary
             } => {
                 write!(f, "{} {{", object_type)?;
                 for (name, value) in fields {
@@ -65,11 +72,29 @@ impl<'a> Display for DisplayValue<'a> {
 }
 
 #[derive(Debug, Serialize)]
+pub struct TickValue<'a> {
+    pub tick: Tick,
+    pub value: DisplayValue<'a>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct TickOutput {
+    pub tick: Tick,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TickError {
+    pub tick: Tick,
+    pub error: Error,
+}
+
+#[derive(Debug, Serialize)]
 pub struct Results<'a> {
     pub last_tick: Tick,
-    pub objects: HashMap<&'a str, Vec<(Tick, HashMap<&'a str, DisplayValue<'a>>)>>,
-    pub output: Vec<(Tick, String)>,
-    pub errors: Vec<(Tick, Error)>,
+    pub objects: HashMap<&'a str, Vec<TickValue<'a>>>,
+    pub output: Vec<TickOutput>,
+    pub errors: Vec<TickError>,
 }
 
 impl<'a> Results<'a> {
@@ -91,7 +116,7 @@ pub struct Vm {
     globals: HashMap<VariableName, Value>,
     // Starting simple, no deletions
     objects: HashMap<TypeName, Vec<(Tick, HashMap<FieldName, Value>)>>,
-    output: Vec<(Tick, String)>,
+    output: Vec<TickOutput>,
     stack: Vec<Value>,
     ip: usize,
     tick: Tick,
@@ -129,13 +154,19 @@ impl Vm {
                     let display_value = self.display(value);
                     display_fields.insert(field_name, display_value);
                 }
-                display_objects.push((*tick, display_fields));
+                display_objects.push(TickValue {
+                    tick: *tick,
+                    value: DisplayValue::object(type_name, display_fields),
+                });
             }
             results.objects.insert(type_name, display_objects);
         }
         // add error
         if let Err(e) = run {
-            results.errors.push((self.tick, e));
+            results.errors.push(TickError {
+                tick: self.tick,
+                error: e,
+            });
         };
         results
     }
@@ -160,16 +191,16 @@ impl Vm {
                 }
                 let object_type = &object_type_name;
                 let fields = &display_fields;
-                let mut temp_value = String::new();
-                write!(temp_value, "{} {{", object_type).unwrap();
-                for (name, value) in fields {
-                    write!(temp_value, " {}: {},", name, value).unwrap();
-                }
-                write!(temp_value, " }}").unwrap();
+                // let mut temp_value = String::new();
+                // write!(temp_value, "{} {{", object_type).unwrap();
+                // for (name, value) in fields {
+                //     write!(temp_value, " {}: {},", name, value).unwrap();
+                // }
+                // write!(temp_value, " }}").unwrap();
                 DisplayValue::Object {
                     object_type: object_type_name,
                     fields: display_fields,
-                    value: temp_value,
+                    //value: temp_value,
                 }
             }
         }
@@ -192,7 +223,10 @@ impl Vm {
                 Op::Print => {
                     let val = self.stack.pop().unwrap();
                     let display_val = self.display(&val);
-                    self.output.push((self.tick, format!("{}", display_val)));
+                    self.output.push(TickOutput {
+                        tick: self.tick,
+                        value: format!("{}", display_val),
+                    });
                 }
                 Op::Pop => {
                     _ = self.stack.pop().unwrap();

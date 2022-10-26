@@ -2,8 +2,10 @@ import { defineConfig } from 'astro/config';
 
 // https://astro.build/config
 import vercel from "@astrojs/vercel/serverless";
-
 import wasm from "vite-plugin-wasm";
+
+// https://astro.build/config
+import solidJs from "@astrojs/solid-js";
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,5 +13,6 @@ export default defineConfig({
   adapter: vercel(),
   vite: {
     plugins: [wasm()]
-  }
+  },
+  integrations: [solidJs()]
 });

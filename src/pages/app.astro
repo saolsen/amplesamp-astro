@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import Results from "../components/Results";
 
 import getUserConnection from "../auth";
 
@@ -11,11 +12,14 @@ if (user) {
   return Astro.redirect("/");
 }
 
-const source = `
-# test program
+const source = `# test program
 type Organization {
     i: Int,
     number_of_employees: Int,
+}
+type Repository {
+    i: Int,
+    organization: Organization,
 }
 print 1
 print 2
@@ -25,6 +29,10 @@ github_org = create Organization {
     number_of_employees: 1,
 }
 print github_org
+code_repo = create Repository {
+    i: 1,
+    organization: github_org
+}
 `;
 ---
 
@@ -54,7 +62,8 @@ print github_org
       </div>
     </section>
     <section class="results-panal">
-      <header class="header">
+      <Results client:load />
+      <!-- <header class="header">
         <nav class="nav tabs">
           <input
             class="tab-input"
@@ -79,10 +88,10 @@ print github_org
       </header>
       <div id="program_output" class="results">
         <div id="results-tab" class="tab content1">
-          <div id="results">results go here</div>
+          <div id="results"><Results /></div>
         </div>
         <div id="errors-tab" class="tab content2">Run to see errors</div>
-      </div>
+      </div> -->
     </section>
   </main>
   <textarea id="program_source" name="source" style="display: none"
@@ -92,7 +101,63 @@ print github_org
 </Layout>
 <script>
   import * as monaco from "monaco-editor";
+  import { action } from "nanostores";
   import { compile, Vm } from "amplesamp-wasm";
+  import { appStore, Results } from "../app";
+
+  const updateSourceAndCompile = action(
+    appStore,
+    "compile",
+    (store, new_source: string) => {
+      store.setKey("source", new_source);
+      try {
+        compile(new_source);
+        store.setKey("errors", []);
+      } catch (e: any) {
+        store.setKey("errors", e);
+      }
+    }
+  );
+
+  export const runProgram = action(appStore, "run", (store) => {
+    const source = store.get().source;
+    try {
+      const vm = new Vm(source);
+      const results = vm.run() as Results;
+      store.setKey("results", results);
+
+      // let json_results: Results = {
+      //   last_tick: results.last_tick,
+      //   objects: {},
+      //   output: []
+      // };
+
+      // // Turn results into better json format. (this is kinda dumb can we just change it on the rust side?)
+      // for (let [object_type, values] of results.objects.entries()) {
+      //   let object_arr = [];
+      //   for (let value of values) {
+      //     const tick = value[0];
+      //     const obj_map = value[1];
+      //     let fields = {};
+      //     for (let [field, value] of obj_map.entries()) {
+      //       fields[field] = value;
+      //     }
+      //     let obj = {tick, type: 'Object', object_type: object_type};
+      //   }
+      // }
+
+      // let returned_objects = result.objects as Map<string, any>;
+      // for (let [key, value] of returned_objects.entries()) {
+      //   objects[key] = value;
+      // }
+      // result.objects = objects;
+      // store.setKey("results", result);
+      store.setKey("errors", []);
+    } catch (e: any) {
+      console.error(e);
+      store.setKey("errors", [e]);
+    }
+  });
 
   let source_element = document.getElementById(
     "program_source"
@@ -109,16 +174,12 @@ print github_org
     automaticLayout: true,
   });
 
-  async function compile_src() {
-    // keep editor in sync with the source element
-    let new_source = code_editor.getValue();
-    source_element.value = new_source;
-
-    try {
-      compile(new_source);
-    } catch (e: any) {
+  // Update editor markers when store changes.
+  appStore.listen((value, key) => {
+    if (key == "errors") {
+      const errors = value[key];
       const markers = [];
-      for (let error of e) {
+      for (let error of errors) {
         markers.push({
           message: error.message,
           severity: monaco.MarkerSeverity.Error,
@@ -134,64 +195,73 @@ print github_org
         monaco.editor.setModelMarkers(model, "owner", markers);
       }
     }
-  }
-  compile_src();
-
-  code_editor.onDidChangeModelContent(function (_) {
-    compile_src();
   });
 
-  // Tabs
-
-  let selected_tab = "results-tab";
-  let tabs = ["results-tab", "errors-tab"];
-
-  function showTab(id: string) {
-    selected_tab = id;
-    for (const tabId of tabs) {
-      let tab = document.getElementById(tabId);
-      if (tab) {
-        if (tabId === id) {
-          tab.style.display = "block";
-        } else {
-          tab.style.display = "none";
-        }
-      }
-    }
-  }
-  showTab(selected_tab);
-
-  function tabClick(element: HTMLInputElement) {
-    showTab(element.value);
+  // Update store when editor changes.
+  async function sourceChanged() {
+    let new_source = code_editor.getValue();
+    source_element.value = new_source;
+    updateSourceAndCompile(new_source);
   }
 
-  function run() {
-    const source = code_editor.getValue();
-    try {
-      let vm = new Vm(source);
-      let result = vm.run();
-      console.log(result);
-      let element = document.getElementById("results");
-      // todo: better way of showing this.
-      // dont really wanna do like a full react/solid
-      // thing for both sides of this but could if I need to.
-      if (element) {
-        element.innerText = JSON.stringify(result, null, 2);
-      }
-    } catch (e: any) {
-      console.log(e);
-    }
-  }
+  code_editor.onDidChangeModelContent(function (_) {
+    sourceChanged();
+  });
+
+  // Call to initialize errors.
+  sourceChanged();
+
+  // // Tabs
+
+  // let selected_tab = "results-tab";
+  // let tabs = ["results-tab", "errors-tab"];
+
+  // function showTab(id: string) {
+  //   selected_tab = id;
+  //   for (const tabId of tabs) {
+  //     let tab = document.getElementById(tabId);
+  //     if (tab) {
+  //       if (tabId === id) {
+  //         tab.style.display = "block";
+  //       } else {
+  //         tab.style.display = "none";
+  //       }
+  //     }
+  //   }
+  // }
+  // showTab(selected_tab);
+
+  // function tabClick(element: HTMLInputElement) {
+  //   showTab(element.value);
+  // }
+
+  // function run() {
+  //   const source = code_editor.getValue();
+  //   try {
+  //     let vm = new Vm(source);
+  //     let result = vm.run();
+  //     console.log(result);
+  //     let element = document.getElementById("results");
+  //     // todo: better way of showing this.
+  //     // dont really wanna do like a full react/solid
+  //     // thing for both sides of this but could if I need to.
+  //     if (element) {
+  //       element.innerText = JSON.stringify(result, null, 2);
+  //     }
+  //   } catch (e: any) {
+  //     console.log(e);
+  //   }
+  // }
 
   function runClick(_: HTMLButtonElement) {
-    run();
+    runProgram();
   }
 
   declare global {
-    function tabClick(element: HTMLInputElement): void;
+    //function tabClick(element: HTMLInputElement): void;
     function runClick(element: HTMLButtonElement): void;
   }
-  globalThis.tabClick = tabClick;
+  // globalThis.tabClick = tabClick;
   globalThis.runClick = runClick;
 </script>
 <style>

@@ -12,11 +12,16 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/solid-js": "^1.2.1",
     "@astrojs/vercel": "^2.3.1",
+    "@nanostores/solid": "^0.3.0",
     "@supabase/supabase-js": "^2.0.4",
     "amplesamp-wasm": "file:amplesamp-wasm/pkg",
     "astro": "^1.5.2",
-    "monaco-editor": "^0.34.1"
+    "monaco-editor": "^0.34.1",
+    "nanostores": "^0.7.0",
+    "solid-js": "^1.6.0",
+    "wasm-pack": "^0.10.3"
   },
   "devDependencies": {
     "vite-plugin-wasm": "^3.1.0"
