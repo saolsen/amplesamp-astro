@@ -62,8 +62,7 @@ code_repo = create Repository {
       </div>
     </section>
     <section class="results-panal">
-      <Results client:load />
-      <!-- <header class="header">
+      <header class="header">
         <nav class="nav tabs">
           <input
             class="tab-input"
@@ -71,27 +70,22 @@ code_repo = create Repository {
             name="tabs"
             id="tab1"
             onclick="tabClick(this);"
-            value="results-tab"
+            value="objects-tab"
             checked
           />
-          <label class="nav-item" for="tab1">Results</label>
+          <label class="nav-item" for="tab1">Objects</label>
           <input
             class="tab-input"
             type="radio"
             name="tabs"
             id="tab2"
             onclick="tabClick(this);"
-            value="errors-tab"
+            value="output-tab"
           />
-          <label class="nav-item" for="tab2">Errors</label>
+          <label class="nav-item" for="tab2">Output</label>
         </nav>
       </header>
-      <div id="program_output" class="results">
-        <div id="results-tab" class="tab content1">
-          <div id="results"><Results /></div>
-        </div>
-        <div id="errors-tab" class="tab content2">Run to see errors</div>
-      </div> -->
+      <Results client:load />
     </section>
   </main>
   <textarea id="program_source" name="source" style="display: none"
@@ -125,33 +119,6 @@ code_repo = create Repository {
       const vm = new Vm(source);
       const results = vm.run() as Results;
       store.setKey("results", results);
-
-      // let json_results: Results = {
-      //   last_tick: results.last_tick,
-      //   objects: {},
-      //   output: []
-      // };
-
-      // // Turn results into better json format. (this is kinda dumb can we just change it on the rust side?)
-      // for (let [object_type, values] of results.objects.entries()) {
-      //   let object_arr = [];
-      //   for (let value of values) {
-      //     const tick = value[0];
-      //     const obj_map = value[1];
-      //     let fields = {};
-      //     for (let [field, value] of obj_map.entries()) {
-      //       fields[field] = value;
-      //     }
-      //     let obj = {tick, type: 'Object', object_type: object_type};
-      //   }
-      // }
-
-      // let returned_objects = result.objects as Map<string, any>;
-      // for (let [key, value] of returned_objects.entries()) {
-      //   objects[key] = value;
-      // }
-      // result.objects = objects;
-      // store.setKey("results", result);
       store.setKey("errors", []);
     } catch (e: any) {
       console.error(e);
@@ -211,57 +178,40 @@ code_repo = create Repository {
   // Call to initialize errors.
   sourceChanged();
 
-  // // Tabs
+  // Tabs
 
-  // let selected_tab = "results-tab";
-  // let tabs = ["results-tab", "errors-tab"];
+  let selected_tab = "objects-tab";
+  let tabs = ["objects-tab", "output-tab"];
 
-  // function showTab(id: string) {
-  //   selected_tab = id;
-  //   for (const tabId of tabs) {
-  //     let tab = document.getElementById(tabId);
-  //     if (tab) {
-  //       if (tabId === id) {
-  //         tab.style.display = "block";
-  //       } else {
-  //         tab.style.display = "none";
-  //       }
-  //     }
-  //   }
-  // }
-  // showTab(selected_tab);
+  function showTab(id: string) {
+    selected_tab = id;
+    for (const tabId of tabs) {
+      let tab = document.getElementById(tabId);
+      if (tab) {
+        if (tabId === id) {
+          tab.style.display = "block";
+        } else {
+          tab.style.display = "none";
+        }
+      }
+    }
+  }
+  showTab(selected_tab);
 
-  // function tabClick(element: HTMLInputElement) {
-  //   showTab(element.value);
-  // }
-
-  // function run() {
-  //   const source = code_editor.getValue();
-  //   try {
-  //     let vm = new Vm(source);
-  //     let result = vm.run();
-  //     console.log(result);
-  //     let element = document.getElementById("results");
-  //     // todo: better way of showing this.
-  //     // dont really wanna do like a full react/solid
-  //     // thing for both sides of this but could if I need to.
-  //     if (element) {
-  //       element.innerText = JSON.stringify(result, null, 2);
-  //     }
-  //   } catch (e: any) {
-  //     console.log(e);
-  //   }
-  // }
+  function tabClick(element: HTMLInputElement) {
+    console.log("tabclick", element.value);
+    showTab(element.value);
+  }
 
   function runClick(_: HTMLButtonElement) {
     runProgram();
   }
 
   declare global {
-    //function tabClick(element: HTMLInputElement): void;
+    function tabClick(element: HTMLInputElement): void;
     function runClick(element: HTMLButtonElement): void;
   }
-  // globalThis.tabClick = tabClick;
+  globalThis.tabClick = tabClick;
   globalThis.runClick = runClick;
 </script>
 <style>
