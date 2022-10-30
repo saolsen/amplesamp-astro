@@ -10,26 +10,28 @@ use string_interner::{symbol::SymbolU32, StringInterner, Symbol};
 #[derive(Debug, Clone)]
 pub enum Value {
     Nil,
-    Int(i64), // integer
-    Dec(f64), // decimal
+    Int(i64),
+    Dec(f64),
+    Bool(bool),
+    String(InternedString),
     Tag(FieldName),
     Object(TypeName, usize),
 }
 
-// todo: just delete this.
-impl Display for Value {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Value::Nil => write!(f, "nil"),
-            Value::Int(i) => write!(f, "{}", i),
-            Value::Dec(d) => write!(f, "{}", d),
-            Value::Tag(field) => write!(f, "{:?}", field),
-            Value::Object(type_name, id) => write!(f, "{:?}:{}", type_name, id),
-        }
-    }
-}
+// // todo: just delete this.
+// impl Display for Value {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+//         match self {
+//             Value::Nil => write!(f, "nil"),
+//             Value::Int(i) => write!(f, "{}", i),
+//             Value::Dec(d) => write!(f, "{}", d),
+//             Value::Tag(field) => write!(f, "{:?}", field),
+//             Value::Object(type_name, id) => write!(f, "{:?}:{}", type_name, id),
+//         }
+//     }
+// }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Op {
     Halt,
     Return,
@@ -67,9 +69,14 @@ pub struct Loc {
     pub col: u32,
 }
 
-// todo: some better debug functions that reference the chunk
-// and can print the real strings.
-// chunk.debug() or something like that
+#[derive(Eq, Hash, PartialEq, Clone, Copy)]
+pub struct InternedString(pub SymbolU32);
+impl Debug for InternedString {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "s_{}", self.0.to_usize())
+    }
+}
+
 #[derive(Eq, Hash, PartialEq, Clone, Copy)]
 pub struct TypeName(pub SymbolU32);
 impl Debug for TypeName {
@@ -121,12 +128,7 @@ impl Program {
         }
     }
 
-    // need a trait on t taht is like from_int or something.
-
-    // /// Helpers for compiler to build programs
-    // pub fn intern<T>(&mut self, name: &str) -> T {
-    //     T(self.strings.get_or_intern(name))
-    // }
+    /// Helpers for compiler to build programs
 
     pub fn intern_type_name(&mut self, name: &str) -> TypeName {
         TypeName(self.strings.get_or_intern(name))

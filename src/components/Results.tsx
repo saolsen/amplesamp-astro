@@ -28,6 +28,9 @@ export default function Results() {
             <div id="objects-tab" class="tab content1">
                 Run to see results
             </div>
+            <div id="output-tab" class="tab content2">
+                Run to see output
+            </div>
         </Show>
         <Show when={$appStore().results}>
             <div id="objects-tab" class="tab content1">
@@ -58,12 +61,18 @@ export default function Results() {
                     }
                 </For>
             </div>
-            <div id="output-tab" class="tab content1">
+            <div id="output-tab" class="tab content2">
                 <h3>Output</h3>
                 <For each={Array.from($appStore().results!.output)}>
                     {output => <div>{output.value}</div>}
                 </For>
             </div>
         </Show>
+        <div id="errors-tab" class="tab content3">
+            <h3>Errors</h3>
+            <For each={Array.from($appStore().errors)}>
+                {error => <div>{JSON.stringify(error)}</div>}
+            </For>
+        </div>
     </div>
 }
