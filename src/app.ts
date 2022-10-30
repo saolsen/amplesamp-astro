@@ -21,6 +21,7 @@ export type Results = {
     last_tick: number;
     objects: Map<string, TickValue[]>,
     output: TickOutput[],
+    errors: Error[]
 }
 
 export type Error = {
