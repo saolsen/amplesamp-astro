@@ -7,7 +7,7 @@ use std::{
 
 use string_interner::{symbol::SymbolU32, StringInterner, Symbol};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Value {
     Nil,
     Int(i64),
@@ -41,8 +41,10 @@ pub enum Op {
     Get(FieldName),
     Tag(FieldName), // give a name to the thing on the top of the stack, so we can build objects later
     Create(TypeName),
+    Query(TypeName),
     DefineGlobal(VariableName),
-    Assign(VariableName),
+    AssignVar(VariableName),
+    AssignField(FieldName),
     Read(VariableName),
     Generate(TypeName), // todo: will need constraints somewhere eventuially
     Add,
@@ -216,12 +218,20 @@ impl Program {
                 Op::Halt => {
                     eprintln!("{}:{}:\thalt", loc.line, loc.col,)
                 }
-                Op::Assign(var_name) => {
+                Op::AssignVar(var_name) => {
                     eprintln!(
-                        "{}:{}:\tassign {}",
+                        "{}:{}:\tassign_var {}",
                         loc.line,
                         loc.col,
                         self.variable_name(var_name)
+                    )
+                }
+                Op::AssignField(field_name) => {
+                    eprintln!(
+                        "{}:{}:\tassign_field {}",
+                        loc.line,
+                        loc.col,
+                        self.field_name(field_name)
                     )
                 }
                 Op::Read(var_name) => {
@@ -240,6 +250,9 @@ impl Program {
                 }
                 Op::Create(name) => {
                     eprintln!("{}:{}:\tcreate {}", loc.line, loc.col, self.type_name(name))
+                }
+                Op::Query(name) => {
+                    eprintln!("{}:{}:\tquery {}", loc.line, loc.col, self.type_name(name))
                 }
                 Op::Generate(name) => {
                     eprintln!(

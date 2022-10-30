@@ -74,27 +74,46 @@ impl Compiler {
         }
     }
 
-    // fn var_declaration(&mut self, vardecl: Src<VarDecl>) {
-    //     todo!();
-    // }
-
     fn statement(&mut self, stmt: ast::Src<ast::Stmt>) {
-        let loc = loc(&stmt.src);
+        let stmt_loc = loc(&stmt.src);
         match stmt.node {
-            ast::Stmt::Print(expr) => self.print_statement(loc, expr),
+            ast::Stmt::Print(expr) => self.print_statement(stmt_loc, expr),
             ast::Stmt::Assign { target, expr } => {
-                if target.len() > 1 {
-                    todo!("setters");
+                if target.len() == 1 {
+                    let target = target.into_iter().next().unwrap();
+                    let name = self.program.intern_variable_name(target.node);
+                    self.expression(expr);
+                    self.push_op(stmt_loc, bc::Op::AssignVar(name));
+                } else {
+                    let path_len = target.len();
+
+                    // Push the expr
+                    self.expression(expr);
+
+                    // variable
+                    let var = &target[0];
+                    let var_loc = loc(&var.src);
+                    let var_name = self.program.intern_variable_name(&var.node);
+                    self.push_op(var_loc, bc::Op::Read(var_name));
+
+                    // getters
+                    for i in 1..=path_len - 2 {
+                        let field = &target[i];
+                        let field_loc = loc(&field.src);
+                        let field_name = self.program.intern_field_name(&field.node);
+                        self.push_op(field_loc, bc::Op::Get(field_name));
+                    }
+
+                    // setter
+                    let field = &target[path_len - 1];
+                    let field_loc = loc(&field.src);
+                    let field_name = self.program.intern_field_name(&field.node);
+                    self.push_op(field_loc, bc::Op::AssignField(field_name));
                 }
-                assert!(target.len() == 1);
-                let target = target.into_iter().next().unwrap();
-                let name = self.program.intern_variable_name(target.node);
-                self.expression(expr);
-                self.push_op(loc, bc::Op::Assign(name));
             }
             ast::Stmt::Expression(expr) => {
                 self.expression(expr);
-                self.push_op(loc, bc::Op::Pop);
+                self.push_op(stmt_loc, bc::Op::Pop);
             }
         }
     }
@@ -160,6 +179,17 @@ impl Compiler {
                     self.push_op(field_loc, bc::Op::Tag(name));
                 }
                 self.push_op(expr_loc, bc::Op::Create(type_name));
+            }
+            ast::Expr::Query(obj) => {
+                let type_name = self.program.intern_type_name(obj.node.kind);
+                for field in obj.node.fields {
+                    let field_loc = loc(&field.src);
+                    let field = field.node;
+                    let name = self.program.intern_field_name(field.name);
+                    self.expression(field.value);
+                    self.push_op(field_loc, bc::Op::Tag(name));
+                }
+                self.push_op(expr_loc, bc::Op::Query(type_name));
             }
         }
     }

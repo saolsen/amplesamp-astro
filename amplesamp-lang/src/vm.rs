@@ -269,18 +269,60 @@ impl Vm {
                     self.globals.insert(var_name, val);
                 }
                 // todo: assign to more than just variables, specifically fields
-                Op::Assign(var_name) => {
+                Op::AssignVar(var_name) => {
                     let val = self.stack_pop()?;
                     // todo: check if var is defined otherwise it's a runtime error
                     self.globals.insert(var_name, val.clone());
                     // put value back on the stack
                     self.stack.push(val);
                 }
+                Op::AssignField(field_name) => {
+                    let lhs = self.stack_pop()?;
+                    let rhs = self.stack_pop()?;
+                    if let Value::Object(typ, id) = lhs {
+                        self.objects.entry(typ).and_modify(|objs| {
+                            objs[id].1.insert(field_name, rhs);
+                        });
+                    } else {
+                        return Err(Error::Runtime {
+                            line: loc.line,
+                            column: loc.col,
+                            message: format!(
+                                "Can only assign field {} on an object",
+                                self.program.field_name(&field_name),
+                            ),
+                        });
+                    }
+                }
                 Op::Read(var_name) => {
                     let val = self.globals_get(&var_name)?;
                     self.stack.push(val.clone());
                 }
-                Op::Get(_) => todo!(),
+                Op::Get(field_name) => {
+                    let val = self.stack_pop()?;
+                    if let Value::Object(typ, id) = val {
+                        let (_, ref fields) = self.objects.get(&typ).unwrap()[id];
+                        if let Some(val) = fields.get(&field_name) {
+                            self.stack.push(val.clone());
+                        } else {
+                            return Err(Error::Runtime {
+                                line: loc.line,
+                                column: loc.col,
+                                message: format!(
+                                    "no field {} on {}",
+                                    self.program.field_name(&field_name),
+                                    self.program.type_name(&typ)
+                                ),
+                            });
+                        }
+                    } else {
+                        return Err(Error::Runtime {
+                            line: loc.line,
+                            column: loc.col,
+                            message: "expected object".to_string(),
+                        });
+                    }
+                }
                 Op::Tag(field_name) => {
                     self.stack.push(Value::Tag(field_name));
                 }
@@ -325,7 +367,6 @@ impl Vm {
                             }
                         }
                     }
-
                     // check that all fields were provided
                     if !needed_fields.is_empty() {
                         let type_name = self.program.type_name(&type_name);
@@ -348,6 +389,88 @@ impl Vm {
                     objs.push((self.tick, object));
                     // Put the object on the stack
                     self.stack.push(Value::Object(type_name, objs.len() - 1));
+                }
+                Op::Query(type_name) => {
+                    if !self.program.types.contains_key(&type_name) {
+                        let type_name = self.program.type_name(&type_name);
+                        return Err(Error::Runtime {
+                            message: format!("Type {} not defined", type_name),
+                            line: loc.line,
+                            column: loc.col,
+                        });
+                    }
+                    let typedef = self.program.types.get(&type_name).unwrap();
+                    let mut needed_fields: HashSet<FieldName> =
+                        typedef.fields.keys().cloned().collect();
+                    let mut object = HashMap::new();
+                    // collect fields from the stack
+                    loop {
+                        let val = self.stack.pop();
+                        match val {
+                            Some(Value::Tag(field_name)) => {
+                                let val = self.stack_pop()?;
+                                if !needed_fields.contains(&field_name) {
+                                    let type_name = self.program.type_name(&type_name);
+                                    let field_name = self.program.field_name(&field_name);
+                                    return Err(Error::Runtime {
+                                        message: format!(
+                                            "Unknown field {} for type {}",
+                                            type_name, field_name
+                                        ),
+                                        line: loc.line,
+                                        column: loc.col,
+                                    });
+                                }
+                                needed_fields.remove(&field_name);
+                                object.insert(field_name, val);
+                            }
+                            None => break,
+                            Some(v) => {
+                                self.stack.push(v);
+                                break;
+                            }
+                        }
+                    }
+
+                    // Up until here query and create were the same. Now instead of creating a new object
+                    // we are going to find an existing one where all the fields match.
+                    let mut found = vec![];
+                    for (i, (_tick, obj)) in self
+                        .objects
+                        .get(&type_name)
+                        .unwrap_or(&vec![])
+                        .iter()
+                        .enumerate()
+                    {
+                        let mut matches = true;
+                        for (field_name, val) in object.iter() {
+                            if let Some(obj_val) = obj.get(field_name) {
+                                if *obj_val != *val {
+                                    matches = false;
+                                    break;
+                                }
+                            } else {
+                                matches = false;
+                                break;
+                            }
+                        }
+                        if matches {
+                            found.push(i);
+                        }
+                    }
+
+                    // Now we have multiple possible objects that match the query. For now just pick a random one.
+                    if found.is_empty() {
+                        return Err(Error::Runtime {
+                            message: "No matching object found".to_owned(),
+                            line: loc.line,
+                            column: loc.col,
+                        });
+                    }
+
+                    let i = rand::thread_rng().gen_range(0..found.len());
+                    let obj_i = found[i];
+                    self.stack.push(Value::Object(type_name, obj_i));
                 }
                 Op::Generate(typ) => {
                     // Generate values for the type.
@@ -1206,25 +1329,33 @@ mod tests {
         let program = r#"
         type Foo { id: Int };
         type Bar { id: Int, foo: Foo };
-        print 1;
+        #print 1;
         var x;
         var y = 1;
         x = 2;
-        print x;
-        print y;
-        print x + y;
+        #print x;
+        #print y;
+        #print x + y;
         y = x;
-        print y;
+        #print y;
         var foo = create Foo { id: x };
-        print foo;
+        print foo.id;
+        foo.id = 999;
+        print foo.id;
+        #print foo;
         var b = create Bar { id: 1, foo: foo };
-        print b;
+        print 12345;
+        print b.foo.id;
+        b.foo.id = 888;
+        print foo.id;
         var foo_again = query Foo { id: x};
         var bar = create Bar { id: @Int, foo: foo_again };
         # var bar_again = query Bar { id: bar.id };
         #print foo;
         #print bar;
-        print @String;
+        #print @String;
+        #print foo_again;
+        #var dont_exist = query Foo { id: 99999};
         "#;
         let ast = crate::parser::parse_program(program).unwrap();
         let program = crate::compiler::compile(ast);

@@ -241,18 +241,22 @@ fn decimal<'a, E: ParseError<Span<'a>> + ContextError<Span<'a>>>(
 fn command<'a>(
     command: &'a str,
     input: Span<'a>,
-) -> IResult<Span<'a>, Src<'a, Expr<'a>>, VerboseError<Span<'a>>> {
+) -> IResult<Span<'a>, Src<'a, Object<'a>>, VerboseError<Span<'a>>> {
     let (rest, (_, obj)) = tuple((tag(command), preceded(ws1, object)))(input)?;
+    //let create = Expr::Create(obj);
+    Ok((rest, obj))
+}
+
+fn create<'a>(input: Span<'a>) -> IResult<Span<'a>, Src<Expr>, VerboseError<Span<'a>>> {
+    let (rest, obj) = command("create", input)?;
     let create = Expr::Create(obj);
     Ok((rest, ast_from_to(input, rest, create)))
 }
 
-fn create<'a>(input: Span<'a>) -> IResult<Span<'a>, Src<Expr>, VerboseError<Span<'a>>> {
-    command("create", input)
-}
-
 fn query<'a>(input: Span<'a>) -> IResult<Span<'a>, Src<Expr>, VerboseError<Span<'a>>> {
-    command("query", input)
+    let (rest, obj) = command("query", input)?;
+    let create = Expr::Query(obj);
+    Ok((rest, ast_from_to(input, rest, create)))
 }
 
 fn command_exp<'a>(input: Span<'a>) -> IResult<Span<'a>, Src<Expr>, VerboseError<Span<'a>>> {

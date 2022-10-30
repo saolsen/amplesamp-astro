@@ -106,6 +106,7 @@ pub enum Expr<'a> {
     Op(Src<'a, Op>, Box<Src<'a, Expr<'a>>>),
 
     Create(Src<'a, Object<'a>>),
+    Query(Src<'a, Object<'a>>),
 }
 
 // x
