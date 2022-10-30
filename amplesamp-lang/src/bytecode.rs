@@ -18,19 +18,6 @@ pub enum Value {
     Object(TypeName, usize),
 }
 
-// // todo: just delete this.
-// impl Display for Value {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             Value::Nil => write!(f, "nil"),
-//             Value::Int(i) => write!(f, "{}", i),
-//             Value::Dec(d) => write!(f, "{}", d),
-//             Value::Tag(field) => write!(f, "{:?}", field),
-//             Value::Object(type_name, id) => write!(f, "{:?}:{}", type_name, id),
-//         }
-//     }
-// }
-
 #[derive(Debug, Clone, Copy)]
 pub enum Op {
     Halt,
