@@ -12,29 +12,67 @@ if (user) {
   return Astro.redirect("/");
 }
 
-const source = `# test program
+const source = `# Create some test orgs
 type Organization {
     i: Int,
+    name: String,
     number_of_employees: Int,
 }
 type Repository {
     i: Int,
+    name: String,
     organization: Organization,
 }
-print 1
-print 2
-print 1 + 2
+type Issue {
+    i: Int,
+    repository: Repository,
+    name: String
+}
 
-github_org = create Organization {
+steve_org = create Organization {
     i: 1,
+    name: @String,
     number_of_employees: @Int,
 }
-print github_org
-code_repo = create Repository {
+
+# 3 random repositories
+repo1 = create Repository {
     i: @Int,
-    organization: github_org
+    name: @String,
+    organization: steve_org
 }
-print code_repo
+repo2 = create Repository {
+    i: @Int,
+    name: @String,
+    organization: steve_org
+}
+repo3 = create Repository {
+    i: @Int,
+    name: @String,
+    organization: steve_org
+}
+
+# 3 random issues 
+random_repo = query Repository{}
+issue1 = create Issue {
+    i: @Int,
+    name: @String,
+    repository: random_repo
+}
+random_repo = query Repository{}
+issue2 = create Issue {
+    i: @Int,
+    name: @String,
+    repository: random_repo
+}
+random_repo = query Repository{}
+issue3 = create Issue {
+    i: @Int,
+    name: @String,
+    repository: random_repo
+}
+
+print 1 + 2 / 3 * 4 % -6 <= 999 && !(1==1);
 `;
 ---
 

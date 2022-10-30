@@ -230,7 +230,7 @@ impl Vm {
                     fields: display_fields,
                 }
             }
-            Value::Bool(_) => todo!(),
+            Value::Bool(b) => DisplayValue::Bool { value: *b },
             Value::String(s) => {
                 let s = self.program.string(s);
                 DisplayValue::String { value: s }
@@ -1356,6 +1356,83 @@ mod tests {
         #print @String;
         #print foo_again;
         #var dont_exist = query Foo { id: 99999};
+        "#;
+        let ast = crate::parser::parse_program(program).unwrap();
+        let program = crate::compiler::compile(ast);
+        // program.decompile();
+        let mut vm = Vm::new(program);
+        let results = vm.run();
+        for error in results.errors {
+            println!("{:?}", error);
+        }
+        for output in &results.output {
+            println!("{}", output.value);
+        }
+    }
+
+    #[test]
+    fn test_poc() {
+        let program = r#"
+        type Organization {
+            i: Int,
+            name: String,
+            number_of_employees: Int,
+        }
+        type Repository {
+            i: Int,
+            name: String,
+            organization: Organization,
+        }
+        type Issue {
+            i: Int,
+            repository: Repository,
+            name: String
+        }
+        
+        steve_org = create Organization {
+            i: 1,
+            name: @String,
+            number_of_employees: @Int,
+        }
+        
+        # 3 random repositories
+        repo1 = create Repository {
+            i: @Int,
+            name: @String,
+            organization: steve_org
+        }
+        repo2 = create Repository {
+            i: @Int,
+            name: @String,
+            organization: steve_org
+        }
+        repo3 = create Repository {
+            i: @Int,
+            name: @String,
+            organization: steve_org
+        }
+        
+        # 3 random issues 
+        random_repo = query Repository{}
+        issue1 = create Issue {
+            i: @Int,
+            name: @String,
+            repository: random_repo
+        }
+        random_repo = query Repository{}
+        issue2 = create Issue {
+            i: @Int,
+            name: @String,
+            repository: random_repo
+        }
+        random_repo = query Repository{}
+        issue3 = create Issue {
+            i: @Int,
+            name: @String,
+            repository: random_repo
+        }
+        
+        print 1 + 2 / 3 * 4 % -6 <= 999 && !(1==1);
         "#;
         let ast = crate::parser::parse_program(program).unwrap();
         let program = crate::compiler::compile(ast);

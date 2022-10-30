@@ -15,6 +15,8 @@ function display(value: Value) {
         }
         case 'Int':
             return value.value;
+        case 'String':
+            return value.value;
         default:
             return "todo";
     }
