@@ -118,6 +118,7 @@ pub struct Program {
     pub int: TypeName,
     pub dec: TypeName,
     pub bool: TypeName,
+    pub string: TypeName,
 }
 
 impl Program {
@@ -127,6 +128,7 @@ impl Program {
         let int = TypeName(strings.get_or_intern("Int"));
         let dec = TypeName(strings.get_or_intern("Dec"));
         let bool = TypeName(strings.get_or_intern("Bool"));
+        let string = TypeName(strings.get_or_intern("String"));
 
         Self {
             strings,
@@ -138,6 +140,7 @@ impl Program {
             int,
             dec,
             bool,
+            string,
         }
     }
 
@@ -155,6 +158,10 @@ impl Program {
         VariableName(self.strings.get_or_intern(name))
     }
 
+    pub fn intern_string(&mut self, string: &str) -> InternedString {
+        InternedString(self.strings.get_or_intern(string))
+    }
+
     /// Helpers for vm to run programs
 
     pub fn type_name(&self, type_name: &TypeName) -> &str {
@@ -167,6 +174,10 @@ impl Program {
 
     pub fn variable_name(&self, variable_name: &VariableName) -> &str {
         self.strings.resolve(variable_name.0).unwrap()
+    }
+
+    pub fn string(&self, intern_string: &InternedString) -> &str {
+        self.strings.resolve(intern_string.0).unwrap()
     }
 
     pub fn decompile(&self) {

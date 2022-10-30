@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 
+use rand::distributions::Alphanumeric;
 use rand::{Rng, SeedableRng};
 use serde::Serialize;
 
@@ -32,6 +33,12 @@ pub enum DisplayValue<'a> {
     },
     Dec {
         value: f64,
+    },
+    String {
+        value: &'a str,
+    },
+    Bool {
+        value: bool,
     },
     // Why is tag a display value?
     Tag {
@@ -69,6 +76,8 @@ impl<'a> Display for DisplayValue<'a> {
                 }
                 write!(f, " }}")
             }
+            DisplayValue::String { value } => write!(f, "\"{}\"", value),
+            DisplayValue::Bool { value } => write!(f, "{}", value),
         }
     }
 }
@@ -222,7 +231,10 @@ impl Vm {
                 }
             }
             Value::Bool(_) => todo!(),
-            Value::String(_) => todo!(),
+            Value::String(s) => {
+                let s = self.program.string(s);
+                DisplayValue::String { value: s }
+            }
         }
     }
 
@@ -352,6 +364,15 @@ impl Vm {
                         let mut rng = rand::thread_rng();
                         let val = rng.gen::<bool>();
                         self.stack.push(Value::Bool(val));
+                    } else if typ == self.program.string {
+                        let rng = rand::thread_rng();
+                        let val: String = rng
+                            .sample_iter(&Alphanumeric)
+                            .take(30)
+                            .map(char::from)
+                            .collect();
+                        let interned_val = self.program.intern_string(&val);
+                        self.stack.push(Value::String(interned_val));
                     } else if self.program.types.contains_key(&typ) {
                         // Random object types.
                         // Theres some questions here, like do we generate a new value or do we pull a random value?
@@ -1198,11 +1219,12 @@ mod tests {
         print foo;
         var b = create Bar { id: 1, foo: foo };
         print b;
-        #var foo_again = query Foo { id: x};
+        var foo_again = query Foo { id: x};
         var bar = create Bar { id: @Int, foo: foo_again };
         # var bar_again = query Bar { id: bar.id };
         #print foo;
         #print bar;
+        print @String;
         "#;
         let ast = crate::parser::parse_program(program).unwrap();
         let program = crate::compiler::compile(ast);
