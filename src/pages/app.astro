@@ -23,16 +23,18 @@ type Repository {
 }
 print 1
 print 2
-#print 1 + 2
+print 1 + 2
+
 github_org = create Organization {
     i: 1,
-    number_of_employees: 1,
+    number_of_employees: @Int,
 }
 print github_org
 code_repo = create Repository {
-    i: 1,
+    i: @Int,
     organization: github_org
 }
+print code_repo
 `;
 ---
 

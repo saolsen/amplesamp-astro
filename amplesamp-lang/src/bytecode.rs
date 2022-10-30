@@ -114,17 +114,30 @@ pub struct Program {
     // One big block of code for now, todo: functions
     pub code_locs: Vec<Loc>,
     pub code: Vec<Op>,
+
+    pub int: TypeName,
+    pub dec: TypeName,
+    pub bool: TypeName,
 }
 
 impl Program {
     pub fn new() -> Self {
+        let mut strings = StringInterner::default();
+
+        let int = TypeName(strings.get_or_intern("Int"));
+        let dec = TypeName(strings.get_or_intern("Dec"));
+        let bool = TypeName(strings.get_or_intern("Bool"));
+
         Self {
-            strings: StringInterner::default(),
+            strings,
             types: HashMap::new(),
             type_locs: HashMap::new(),
             constants: Vec::new(),
             code_locs: Vec::new(),
             code: Vec::new(),
+            int,
+            dec,
+            bool,
         }
     }
 

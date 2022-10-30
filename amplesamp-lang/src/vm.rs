@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 
+use rand::{Rng, SeedableRng};
 use serde::Serialize;
 
 use crate::bytecode::{FieldName, Program, TypeName, Value, VariableName};
@@ -32,6 +33,7 @@ pub enum DisplayValue<'a> {
     Dec {
         value: f64,
     },
+    // Why is tag a display value?
     Tag {
         value: &'a str,
     },
@@ -110,6 +112,7 @@ impl<'a> Results<'a> {
 
 pub struct Vm {
     program: Program,
+
     globals: HashMap<VariableName, Value>,
     // Starting simple, no deletions
     objects: HashMap<TypeName, Vec<(Tick, HashMap<FieldName, Value>)>>,
@@ -334,7 +337,33 @@ impl Vm {
                     // Put the object on the stack
                     self.stack.push(Value::Object(type_name, objs.len() - 1));
                 }
-                Op::Generate(_) => todo!(),
+                Op::Generate(typ) => {
+                    // Generate values for the type.
+                    // This is like the real magic of the entire project.
+                    if typ == self.program.int {
+                        let mut rng = rand::thread_rng();
+                        let val = rng.gen_range(0..100);
+                        self.stack.push(Value::Int(val));
+                    } else if typ == self.program.dec {
+                        let mut rng = rand::thread_rng();
+                        let val = rng.gen_range(0.0..1.0);
+                        self.stack.push(Value::Dec(val));
+                    } else if typ == self.program.bool {
+                        let mut rng = rand::thread_rng();
+                        let val = rng.gen::<bool>();
+                        self.stack.push(Value::Bool(val));
+                    } else if self.program.types.contains_key(&typ) {
+                        // Random object types.
+                        // Theres some questions here, like do we generate a new value or do we pull a random value?
+                        todo!()
+                    } else {
+                        return Err(Error::Runtime {
+                            message: format!("Unknown Type {}", self.program.type_name(&typ)),
+                            line: loc.line,
+                            column: loc.col,
+                        });
+                    }
+                }
                 // Can probably clean this up a lot with macros.
                 Op::Add => {
                     let b = self.stack_pop()?;
@@ -1170,7 +1199,7 @@ mod tests {
         var b = create Bar { id: 1, foo: foo };
         print b;
         #var foo_again = query Foo { id: x};
-        #var bar = create Bar { id: @, foo: foo_again };
+        var bar = create Bar { id: @Int, foo: foo_again };
         # var bar_again = query Bar { id: bar.id };
         #print foo;
         #print bar;
