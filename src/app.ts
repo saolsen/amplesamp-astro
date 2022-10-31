@@ -22,6 +22,8 @@ export type Results = {
     objects: Map<string, TickValue[]>,
     output: TickOutput[],
     errors: Error[]
+    types: any[],
+    bytecode: any[],
 }
 
 export type Error = {
@@ -31,10 +33,17 @@ export type Error = {
     column: number;
 }
 
+export type Loc = {
+    line: number;
+    col: number;
+    len: number;
+}
+
 export type App = {
     source: string,
     errors: Error[],
     results: Results | null,
+    instruction: Loc | null,
 };
 
 const initialSource = `
@@ -63,5 +72,5 @@ code_repo = create Repository {
 
 /// Store
 export const appStore = map<App>({
-    source: initialSource, errors: [], results: null
+    source: initialSource, errors: [], results: null, instruction: null
 });

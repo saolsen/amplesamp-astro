@@ -132,6 +132,24 @@ print 1 + 2 / 3 * 4 % -6 <= 999 && !(1==1);
             value="errors-tab"
           />
           <label class="nav-item" for="tab3">Errors</label>
+          <input
+            class="tab-input"
+            type="radio"
+            name="tabs"
+            id="tab4"
+            onclick="tabClick(this);"
+            value="types-tab"
+          />
+          <label class="nav-item" for="tab4">Types</label>
+          <input
+            class="tab-input"
+            type="radio"
+            name="tabs"
+            id="tab5"
+            onclick="tabClick(this);"
+            value="bytecode-tab"
+          />
+          <label class="nav-item" for="tab5">Bytecode</label>
         </nav>
       </header>
       <div class="results">
@@ -195,6 +213,24 @@ print 1 + 2 / 3 * 4 % -6 <= 999 && !(1==1);
 
   // Update editor markers when store changes.
   appStore.listen((value, key) => {
+    if (key == "instruction") {
+      let instruction = value.instruction;
+      if (instruction) {
+        const markers = [];
+        markers.push({
+          severity: monaco.MarkerSeverity.Info,
+          startLineNumber: instruction.line,
+          startColumn: instruction.col,
+          endLineNumber: instruction.line,
+          endColumn: instruction.col,
+          message: "Current instruction",
+        });
+        let model = code_editor.getModel();
+        if (model) {
+          monaco.editor.setModelMarkers(model, "owner", markers);
+        }
+      }
+    }
     if (key == "errors") {
       const errors = value[key];
       const markers = [];
@@ -232,7 +268,13 @@ print 1 + 2 / 3 * 4 % -6 <= 999 && !(1==1);
 
   // Tabs
   let selected_tab = "objects-tab";
-  let tabs = ["objects-tab", "output-tab", "errors-tab"];
+  let tabs = [
+    "objects-tab",
+    "output-tab",
+    "errors-tab",
+    "types-tab",
+    "bytecode-tab",
+  ];
 
   function showTab(id: string) {
     selected_tab = id;

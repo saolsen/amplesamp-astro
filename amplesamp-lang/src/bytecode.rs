@@ -5,6 +5,7 @@ use std::{
     hash::Hash,
 };
 
+use serde::Serialize;
 use string_interner::{symbol::SymbolU32, StringInterner, Symbol};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -51,7 +52,7 @@ pub enum Op {
     Neg,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Loc {
     pub len: usize,
     pub line: u32,

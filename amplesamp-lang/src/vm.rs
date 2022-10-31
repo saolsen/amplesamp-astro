@@ -5,7 +5,7 @@ use rand::distributions::Alphanumeric;
 use rand::{Rng, SeedableRng};
 use serde::Serialize;
 
-use crate::bytecode::{FieldName, Program, TypeName, Value, VariableName};
+use crate::bytecode::{FieldName, Loc, Program, TypeName, Value, VariableName};
 use crate::error::Error;
 
 #[derive(Debug, Clone, Copy, Serialize)]
@@ -103,11 +103,26 @@ pub struct TickError {
 }
 
 #[derive(Debug, Serialize)]
+pub struct DisplayOp {
+    pub loc: Loc,
+    pub op: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DisplayType {
+    pub loc: Loc,
+    pub name: String,
+    pub fields: HashMap<String, String>,
+}
+
+#[derive(Debug, Serialize)]
 pub struct Results<'a> {
     pub last_tick: Tick,
     pub objects: HashMap<&'a str, Vec<TickValue<'a>>>,
     pub output: Vec<TickOutput>,
     pub errors: Vec<TickError>,
+    pub types: Vec<DisplayType>,
+    pub bytecode: Vec<DisplayOp>,
 }
 
 impl<'a> Results<'a> {
@@ -117,6 +132,8 @@ impl<'a> Results<'a> {
             objects: HashMap::new(),
             output: Vec::new(),
             errors: Vec::new(),
+            types: Vec::new(),
+            bytecode: Vec::new(),
         }
     }
 }
@@ -153,6 +170,8 @@ impl Vm {
             objects: HashMap::new(),
             output: self.output.clone(),
             errors: Vec::new(),
+            types: Vec::new(),
+            bytecode: Vec::new(),
         };
         // display objects
         for (type_name, objects) in &self.objects {
@@ -179,6 +198,83 @@ impl Vm {
                 error: e,
             });
         };
+        // display types
+        for (name, typ) in &self.program.types {
+            let type_loc = self.program.type_locs.get(name).unwrap();
+            let type_name = self.program.type_name(name);
+            let mut fields = HashMap::new();
+            for (field_name, field_type) in &typ.fields {
+                let field_name = self.program.field_name(field_name);
+                let field_type = self.program.type_name(field_type);
+                fields.insert(field_name.to_owned(), field_type.to_owned());
+            }
+            results.types.push(DisplayType {
+                loc: type_loc.clone(),
+                name: type_name.to_owned(),
+                fields,
+            });
+        }
+        // display bytecode
+        for (i, op) in self.program.code.iter().enumerate() {
+            let loc = self.program.code_locs[i].clone();
+            use crate::bytecode::Op;
+            let repr = match op {
+                Op::Return => format!("return"),
+                Op::Pop => format!("pop"),
+                Op::Print => format!("print"),
+                Op::Constant(idx) => {
+                    let val = &self.program.constants[*idx];
+                    format!("constant {:?}", self.display(val))
+                }
+                Op::DefineGlobal(var_name) => {
+                    format!("define_global {}", self.program.variable_name(var_name))
+                }
+                Op::Halt => {
+                    format!("halt")
+                }
+                Op::AssignVar(var_name) => {
+                    format!("assign_var {}", self.program.variable_name(var_name))
+                }
+                Op::AssignField(field_name) => {
+                    format!("assign_field {}", self.program.field_name(field_name))
+                }
+                Op::Read(var_name) => {
+                    format!("read {}", self.program.variable_name(var_name))
+                }
+                Op::Get(name) => {
+                    format!("get {}", self.program.field_name(name))
+                }
+                Op::Tag(name) => {
+                    format!("tag {}", self.program.field_name(name))
+                }
+                Op::Create(name) => {
+                    format!("create {}", self.program.type_name(name))
+                }
+                Op::Query(name) => {
+                    format!("query {}", self.program.type_name(name))
+                }
+                Op::Generate(name) => {
+                    format!("generate {}", self.program.type_name(name))
+                }
+                Op::Add => format!("add"),
+                Op::Sub => format!("sub"),
+                Op::Mul => format!("mul"),
+                Op::Div => format!("div"),
+                Op::Mod => format!("mod"),
+                Op::Eq => format!("eq"),
+                Op::Neq => format!("neq"),
+                Op::Lt => format!("lt"),
+                Op::Gt => format!("gt"),
+                Op::Lte => format!("lte"),
+                Op::Gte => format!("gte"),
+                Op::And => format!("and"),
+                Op::Or => format!("or"),
+                Op::Not => format!("not"),
+                Op::Neg => format!("neg"),
+            };
+            results.bytecode.push(DisplayOp { loc, op: repr });
+        }
+
         results
     }
 

@@ -33,6 +33,12 @@ export default function Results() {
             <div id="output-tab" class="tab content2">
                 Run to see output
             </div>
+            <div id="errors-tab" class="tab content3" style="display: none">
+                <h3>Errors</h3>
+                <For each={Array.from($appStore().errors)}>
+                    {error => <div>{JSON.stringify(error)}</div>}
+                </For>
+            </div>
         </Show>
         <Show when={$appStore().results}>
             <div id="objects-tab" class="tab content1">
@@ -69,12 +75,26 @@ export default function Results() {
                     {output => <div>{output.value}</div>}
                 </For>
             </div>
+            <div id="errors-tab" class="tab content3" style="display: none">
+                <h3>Errors</h3>
+                <For each={Array.from($appStore().errors)}>
+                    {error => <div>{JSON.stringify(error)}</div>}
+                </For>
+            </div>
+            <div id="types-tab" class="tab content4" style="display: none">
+                <h3>Types</h3>
+                <For each={Array.from($appStore().results!.types)}>
+                    {type => <div>{JSON.stringify(type)}</div>}
+                </For>
+            </div>
+            <div id="bytecode-tab" class="tab content5" style="display: none">
+                <h3>Bytecode</h3>
+                <For each={Array.from($appStore().results!.bytecode)}>
+                    {line => <div onMouseOver={() => {
+                        appStore.setKey('instruction', line.loc);
+                    }}>{line.op}</div>}
+                </For>
+            </div>
         </Show>
-        <div id="errors-tab" class="tab content3">
-            <h3>Errors</h3>
-            <For each={Array.from($appStore().errors)}>
-                {error => <div>{JSON.stringify(error)}</div>}
-            </For>
-        </div>
     </div>
 }
