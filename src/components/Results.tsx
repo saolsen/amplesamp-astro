@@ -45,7 +45,7 @@ export default function Results() {
                                 <thead>
                                     <tr>
                                         <For each={Array.from(values[0]!.value.fields!.keys())}>
-                                            {key => <th>{key}</th>}
+                                            {key => <th><h4>{key}</h4></th>}
                                         </For>
                                     </tr>
                                 </thead>
@@ -63,7 +63,7 @@ export default function Results() {
                     }
                 </For>
             </div>
-            <div id="output-tab" class="tab content2">
+            <div id="output-tab" class="tab content2" style="display: none">
                 <h3>Output</h3>
                 <For each={Array.from($appStore().results!.output)}>
                     {output => <div>{output.value}</div>}

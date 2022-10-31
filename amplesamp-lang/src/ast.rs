@@ -98,6 +98,8 @@ pub enum Op2 {
 pub enum Expr<'a> {
     Int(Src<'a, i64>),
     Dec(Src<'a, f64>),
+    String(Src<'a, &'a str>),
+    Bool(Src<'a, bool>),
     Var(&'a str),
     Wildcard(&'a str),
     Get(Box<Src<'a, Expr<'a>>>, Src<'a, &'a str>),

@@ -11,6 +11,8 @@ use crate::error::Error;
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct Tick(usize);
 
+// Hmm. the bold actually looks sorta bad.
+
 impl Tick {
     pub fn new() -> Self {
         Self(0)
@@ -1327,6 +1329,10 @@ mod tests {
     #[test]
     fn test_runs() {
         let program = r#"
+
+        print true;
+        print "hello";
+
         type Foo { id: Int };
         type Bar { id: Int, foo: Foo };
         #print 1;

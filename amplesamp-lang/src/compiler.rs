@@ -128,6 +128,11 @@ impl Compiler {
         match expr.node {
             ast::Expr::Int(i) => self.push_constant(expr_loc, bc::Value::Int(i.node)),
             ast::Expr::Dec(d) => self.push_constant(expr_loc, bc::Value::Dec(d.node)),
+            ast::Expr::String(s) => {
+                let interned = self.program.intern_string(s.node);
+                self.push_constant(expr_loc, bc::Value::String(interned))
+            }
+            ast::Expr::Bool(b) => self.push_constant(expr_loc, bc::Value::Bool(b.node)),
             ast::Expr::Var(var) => {
                 let name = self.program.intern_variable_name(var);
                 self.push_op(expr_loc, bc::Op::Read(name));

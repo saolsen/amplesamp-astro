@@ -238,12 +238,27 @@ fn decimal<'a, E: ParseError<Span<'a>> + ContextError<Span<'a>>>(
     ))
 }
 
+fn string<'a, E: ParseError<Span<'a>> + ContextError<Span<'a>>>(
+    input: Span<'a>,
+) -> IResult<Span<'a>, Src<'a, &'a str>, E> {
+    let (rest, i) = delimited(tag("\""), is_not("\""), tag("\""))(input)?;
+    Ok((rest, ast_from_to(input, rest, i.fragment())))
+}
+
+fn bool<'a, E: ParseError<Span<'a>> + ContextError<Span<'a>>>(
+    input: Span<'a>,
+) -> IResult<Span<'a>, Src<'a, bool>, E> {
+    alt((
+        map(tag("true"), |i| ast_from_to(input, i, true)),
+        map(tag("false"), |i| ast_from_to(input, i, false)),
+    ))(input)
+}
+
 fn command<'a>(
     command: &'a str,
     input: Span<'a>,
 ) -> IResult<Span<'a>, Src<'a, Object<'a>>, VerboseError<Span<'a>>> {
     let (rest, (_, obj)) = tuple((tag(command), preceded(ws1, object)))(input)?;
-    //let create = Expr::Create(obj);
     Ok((rest, obj))
 }
 
@@ -268,6 +283,8 @@ fn base<'a>(input: Span<'a>) -> IResult<Span<'a>, Src<Expr>, VerboseError<Span<'
         command_exp,
         map(decimal, |f| wrap_ast(f.src, Expr::Dec(f))),
         map(integer, |i| wrap_ast(i.src, Expr::Int(i))),
+        map(string, |s| wrap_ast(s.src, Expr::String(s))),
+        map(bool, |b| wrap_ast(b.src, Expr::Bool(b))),
         map(preceded(tag("@"), name), |name| {
             ast(name, Expr::Wildcard(name.fragment()))
         }),
