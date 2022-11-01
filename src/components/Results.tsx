@@ -7,13 +7,6 @@ function display(value: Value) {
     switch (value.type) {
         case 'Object': {
             return value.object_type + ':' + value.id;
-            // console.log(value);
-            // const fields = value.fields!;
-            // let result = '{ ';
-            // for (const [key, value] of fields.entries()) {
-            //     result += `${key}: ${display(value)}, `;
-            // }
-            // return result.slice(0, -2) + ' }';
         }
         case 'Int':
             return value.value;
@@ -48,7 +41,6 @@ export default function Results() {
                 <For each={Array.from($appStore().results!.types)}>
                     {typ => {
                         let object_type = typ.name;
-                        console.log(object_type);
                         let values = $appStore().results!.objects.get(object_type);
                         let types = $appStore().results!.types;
                         let type = null;
@@ -116,7 +108,6 @@ export default function Results() {
                                     <For each={Array.from(type.field_order)}>
                                         {field_name => {
                                             let field = type.fields.get(field_name);
-                                            console.log(field)
                                             return <tr>
                                                 <td>{field_name as string}</td>
                                                 <td>{field}</td>
