@@ -6,12 +6,14 @@ import { appStore, Results, Value } from '../app';
 function display(value: Value) {
     switch (value.type) {
         case 'Object': {
-            const fields = value.fields!;
-            let result = '{ ';
-            for (const [key, value] of fields.entries()) {
-                result += `${key}: ${display(value)}, `;
-            }
-            return result.slice(0, -2) + ' }';
+            return value.object_type + ':' + value.id;
+            // console.log(value);
+            // const fields = value.fields!;
+            // let result = '{ ';
+            // for (const [key, value] of fields.entries()) {
+            //     result += `${key}: ${display(value)}, `;
+            // }
+            // return result.slice(0, -2) + ' }';
         }
         case 'Int':
             return value.value;
@@ -43,14 +45,26 @@ export default function Results() {
         <Show when={$appStore().results}>
             <div id="objects-tab" class="tab content1">
                 <h3>Objects</h3>
-                <For each={Array.from($appStore().results!.objects.entries())}>
-                    {([object_type, values]) =>
-                        <div>
+                <For each={Array.from($appStore().results!.types)}>
+                    {typ => {
+                        let object_type = typ.name;
+                        console.log(object_type);
+                        let values = $appStore().results!.objects.get(object_type);
+                        let types = $appStore().results!.types;
+                        let type = null;
+                        for (let typ in types) {
+                            if (types[typ].name == object_type) {
+                                type = types[typ];
+                                break
+                            }
+                        }
+                        let fields = type!.field_order;
+                        return <div>
                             <h4>{object_type}</h4>
                             <table>
                                 <thead>
                                     <tr>
-                                        <For each={Array.from(values[0]!.value.fields!.keys())}>
+                                        <For each={Array.from(fields as string[])}>
                                             {key => <th><h4>{key}</h4></th>}
                                         </For>
                                     </tr>
@@ -58,14 +72,18 @@ export default function Results() {
                                 <tbody>
                                     <For each={values}>
                                         {value => <tr>
-                                            <For each={Array.from(value.value.fields!.values())}>
-                                                {(value) => <td>{display(value)}</td>}
+                                            <For each={Array.from(fields as string[])}>
+                                                {(key) => {
+                                                    let val = value.value.fields?.get(key)!;
+                                                    return <td>{display(val)}</td>
+                                                }}
                                             </For>
                                         </tr>}
                                     </For>
                                 </tbody>
                             </table>
                         </div>
+                    }
                     }
                 </For>
             </div>
@@ -84,7 +102,31 @@ export default function Results() {
             <div id="types-tab" class="tab content4" style="display: none">
                 <h3>Types</h3>
                 <For each={Array.from($appStore().results!.types)}>
-                    {type => <div>{JSON.stringify(type)}</div>}
+                    {type => {
+                        return <div>
+                            <h4>{type.name}</h4>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th><h4>Field</h4></th>
+                                        <th><h4>Type</h4></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <For each={Array.from(type.field_order)}>
+                                        {field_name => {
+                                            let field = type.fields.get(field_name);
+                                            console.log(field)
+                                            return <tr>
+                                                <td>{field_name as string}</td>
+                                                <td>{field}</td>
+                                            </tr>
+                                        }}
+                                    </For>
+                                </tbody>
+                            </table>
+                        </div>
+                    }}
                 </For>
             </div>
             <div id="bytecode-tab" class="tab content5" style="display: none">

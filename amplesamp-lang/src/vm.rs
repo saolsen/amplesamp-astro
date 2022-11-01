@@ -48,14 +48,16 @@ pub enum DisplayValue<'a> {
     },
     Object {
         object_type: &'a str,
+        id: usize,
         fields: HashMap<&'a str, DisplayValue<'a>>,
     },
 }
 
 impl<'a> DisplayValue<'a> {
-    fn object(object_type: &'a str, fields: HashMap<&'a str, DisplayValue<'a>>) -> Self {
+    fn object(object_type: &'a str, id: usize, fields: HashMap<&'a str, DisplayValue<'a>>) -> Self {
         Self::Object {
             object_type,
+            id,
             fields,
         }
     }
@@ -70,6 +72,7 @@ impl<'a> Display for DisplayValue<'a> {
             DisplayValue::Tag { value } => write!(f, "{}", value),
             DisplayValue::Object {
                 object_type,
+                id: _,
                 fields,
             } => {
                 write!(f, "{} {{", object_type)?;
@@ -113,6 +116,7 @@ pub struct DisplayType {
     pub loc: Loc,
     pub name: String,
     pub fields: HashMap<String, String>,
+    pub field_order: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -177,7 +181,7 @@ impl Vm {
         for (type_name, objects) in &self.objects {
             let type_name = self.program.type_name(type_name);
             let mut display_objects = vec![];
-            for (tick, fields) in objects {
+            for (id, (tick, fields)) in objects.iter().enumerate() {
                 let mut display_fields = HashMap::new();
                 for (field_name, value) in fields {
                     let field_name = self.program.field_name(field_name);
@@ -186,7 +190,7 @@ impl Vm {
                 }
                 display_objects.push(TickValue {
                     tick: *tick,
-                    value: DisplayValue::object(type_name, display_fields),
+                    value: DisplayValue::object(type_name, id, display_fields),
                 });
             }
             results.objects.insert(type_name, display_objects);
@@ -199,7 +203,8 @@ impl Vm {
             });
         };
         // display types
-        for (name, typ) in &self.program.types {
+        for name in &self.program.type_order {
+            let typ = &self.program.types.get(name).unwrap();
             let type_loc = self.program.type_locs.get(name).unwrap();
             let type_name = self.program.type_name(name);
             let mut fields = HashMap::new();
@@ -208,10 +213,16 @@ impl Vm {
                 let field_type = self.program.type_name(field_type);
                 fields.insert(field_name.to_owned(), field_type.to_owned());
             }
+            let mut field_order = Vec::new();
+            for field_name in &typ.field_order {
+                let field_name = self.program.field_name(field_name);
+                field_order.push(field_name.to_owned());
+            }
             results.types.push(DisplayType {
                 loc: type_loc.clone(),
                 name: type_name.to_owned(),
                 fields,
+                field_order,
             });
         }
         // display bytecode
@@ -325,6 +336,7 @@ impl Vm {
                 }
                 DisplayValue::Object {
                     object_type: object_type_name,
+                    id: *id,
                     fields: display_fields,
                 }
             }

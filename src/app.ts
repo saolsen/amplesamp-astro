@@ -4,6 +4,7 @@ export type Value = {
     type: string;
     value?: string;
     object_type?: string;
+    id?: number;
     fields?: Map<string, Value>,
 }
 

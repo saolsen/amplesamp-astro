@@ -1,9 +1,5 @@
 use core::fmt::Debug;
-use std::{
-    collections::HashMap,
-    fmt::{Display, Formatter},
-    hash::Hash,
-};
+use std::{collections::HashMap, fmt::Formatter, hash::Hash};
 
 use serde::Serialize;
 use string_interner::{symbol::SymbolU32, StringInterner, Symbol};
@@ -93,11 +89,13 @@ impl Debug for VariableName {
 pub struct Type {
     pub name: TypeName,
     pub fields: HashMap<FieldName, TypeName>,
+    pub field_order: Vec<FieldName>,
 }
 
 #[derive(Debug)]
 pub struct Program {
     strings: StringInterner,
+    pub type_order: Vec<TypeName>,
     pub types: HashMap<TypeName, Type>,
     pub type_locs: HashMap<TypeName, Loc>,
     pub constants: Vec<Value>,
@@ -122,6 +120,7 @@ impl Program {
 
         Self {
             strings,
+            type_order: vec![],
             types: HashMap::new(),
             type_locs: HashMap::new(),
             constants: Vec::new(),

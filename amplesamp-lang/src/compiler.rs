@@ -50,14 +50,24 @@ impl Compiler {
                 let typ = src_typ.node;
                 let name = self.program.intern_type_name(&typ.name);
                 let mut fields = HashMap::new();
+                let mut field_order = Vec::new();
                 for field in typ.fields {
                     let _field_loc = loc(&src_typ.src);
                     let field = field.node;
                     let field_name = self.program.intern_field_name(field.name);
                     let field_type = self.program.intern_type_name(field.kind);
+                    field_order.push(field_name);
                     fields.insert(field_name, field_type);
                 }
-                self.program.types.insert(name, bc::Type { name, fields });
+                self.program.type_order.push(name);
+                self.program.types.insert(
+                    name,
+                    bc::Type {
+                        name,
+                        fields,
+                        field_order,
+                    },
+                );
                 self.program.type_locs.insert(name, typ_loc);
             }
             ast::Decl::VarDecl(src_vardecl) => {

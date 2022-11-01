@@ -102,6 +102,28 @@ const { title } = Astro.props;
         background-color: var(--color-blue-dark);
       }
 
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+      }
+
+      thead th {
+        width: 25%;
+      }
+
+      table {
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      thead {
+        background-color: var(--color-purple);
+        color: white;
+        font-size: 0.875rem;
+        letter-spacing: 2%;
+      }
+
       main {
         flex: 1;
         display: flex;
